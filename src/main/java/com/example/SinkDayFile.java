@@ -10,6 +10,7 @@ import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.runtime.state.filesystem.FsStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 
@@ -57,20 +58,20 @@ public class SinkDayFile {
 //                Time.of(3,TimeUnit.SECONDS)));
 
         ParameterTool parameterTool = ParameterTool.fromArgs(args);
-        String output = parameterTool.get("output","");
-//        DataStreamSource<String> stringDataStreamSource = env.socketTextStream("localhost", 9999);
+        String output = parameterTool.get("output");
+        DataStreamSource<String> dataStream = env.socketTextStream("localhost", 9999);
 
-        Properties properties = new Properties();
-        properties.setProperty("bootstrap.servers","");
-        properties.setProperty("group.id","flink");//消费组id
-        // latest
-        // earliest
-        properties.setProperty("auto.offset.reset","latest");
-        //每5秒检测kafka分区情况
-        properties.setProperty("flink.partition-discovery-interval-millis","5000");
-        properties.setProperty("enable.auto.commit","true");//自动提交
-        properties.setProperty("auto.commit.interval.ms","2000");//自动提交时间间隔
-        DataStream<String> dataStream = env.addSource(new FlinkKafkaConsumer<String>("", new SimpleStringSchema(),properties));
+//        Properties properties = new Properties();
+//        properties.setProperty("bootstrap.servers","");
+//        properties.setProperty("group.id","flink");//消费组id
+//        // latest
+//        // earliest
+//        properties.setProperty("auto.offset.reset","latest");
+//        //每5秒检测kafka分区情况
+//        properties.setProperty("flink.partition-discovery-interval-millis","5000");
+//        properties.setProperty("enable.auto.commit","true");//自动提交
+//        properties.setProperty("auto.commit.interval.ms","2000");//自动提交时间间隔
+//        DataStream<String> dataStream = env.addSource(new FlinkKafkaConsumer<String>("", new SimpleStringSchema(),properties));
 
         dataStream.map(new ParseEvent()).name("map:data-process").filter(Objects::nonNull).name("filter:data")
                 .addSink(MySink.newStreamingFileSink(output)).uid("299").name("data-fs").setParallelism(1);
